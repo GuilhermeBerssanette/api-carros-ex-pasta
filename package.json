@@ -1,0 +1,21 @@
+{
+  "name": "api-carros",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "API de loja de venda de carros usando Express, MongoDB e Mongoose",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.1.1",
+    "mongoose": "^9.4.1",
+    "nodemon": "^3.1.14"
+  }
+}
