@@ -15,6 +15,10 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.json({ message: "API de carros rodando no Render" });
+});
+
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/cars", carRoutes);
