@@ -141,6 +141,31 @@ const countAvailableCars = async () => {
   return Car.countDocuments({ disponivel: true });
 };
 
+
+const adminUpdateDesactivate = async (id) => {
+  const user = await User.findById(id)
+  const account = await Accounts.find({userId: id})
+
+  if (!user) {
+
+  }
+
+  if (account.balance > 0) {
+
+  }
+
+  if (user.active === true) {
+    user.active = false;
+  } else {
+    const error = new Error("usuario ja desativado");
+    throw error;
+  }
+
+  await user.save()
+
+  return user;
+}
+
 export default {
   createCar,
   getAllCars,
@@ -154,3 +179,4 @@ export default {
   getCarByPlate,
   countAvailableCars,
 };
+

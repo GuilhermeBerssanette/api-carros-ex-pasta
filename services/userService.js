@@ -1,11 +1,12 @@
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Sale from "../models/Sale.js";
 
 const createUser = async (data) => {
-  const { nome, email, telefone, senha, idade } = data;
+  const { nome, email, password, telefone, idade, role } = data;
 
-  if (!nome || !email || !telefone || !senha || idade === undefined) {
-    const error = new Error("Nome, email, telefone, senha e idade são obrigatórios");
+  if (!nome || !email || !password) {
+    const error = new Error("Nome, email e senha são obrigatórios");
     error.statusCode = 400;
     throw error;
   }
@@ -18,11 +19,31 @@ const createUser = async (data) => {
     throw error;
   }
 
-  return User.create({ nome, email, telefone, senha, idade });
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await User.create({
+    nome,
+    email,
+    password: hashedPassword,
+    telefone,
+    idade,
+    role: role || "user",
+  });
+
+  return {
+    _id: user._id,
+    nome: user.nome,
+    email: user.email,
+    telefone: user.telefone,
+    idade: user.idade,
+    role: user.role,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 };
 
 const getAllUsers = async () => {
-  return User.find();
+  return User.find().sort({ createdAt: -1 });
 };
 
 const getUserById = async (id) => {
@@ -38,6 +59,23 @@ const getUserById = async (id) => {
 };
 
 const updateUser = async (id, data) => {
+  if (data.email) {
+    const emailExists = await User.findOne({
+      email: data.email,
+      _id: { $ne: id },
+    });
+
+    if (emailExists) {
+      const error = new Error("Já existe outro usuário com esse email");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  if (data.password) {
+    data.password = await bcrypt.hash(data.password, 10);
+  }
+
   const user = await User.findByIdAndUpdate(id, data, {
     new: true,
     runValidators: true,
@@ -56,7 +94,9 @@ const deleteUser = async (id) => {
   const salesCount = await Sale.countDocuments({ userId: id });
 
   if (salesCount > 0) {
-    const error = new Error("Não é possível deletar um usuário que possui vendas cadastradas");
+    const error = new Error(
+      "Não é possível deletar um usuário que possui vendas cadastradas"
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -98,7 +138,10 @@ const updateUserName = async (id, nome) => {
   const user = await User.findByIdAndUpdate(
     id,
     { nome },
-    { new: true, runValidators: true }
+    {
+      new: true,
+      runValidators: true,
+    }
   );
 
   if (!user) {
@@ -112,20 +155,23 @@ const updateUserName = async (id, nome) => {
 
 const emailExists = async (email) => {
   const user = await User.findOne({ email });
+
   return Boolean(user);
 };
 
 const searchUsersByName = async (name) => {
   return User.find({
     nome: { $regex: name, $options: "i" },
-  });
+  }).sort({ createdAt: -1 });
 };
 
 const deleteAllUsers = async () => {
   const salesCount = await Sale.countDocuments();
 
   if (salesCount > 0) {
-    const error = new Error("Não é possível deletar todos os usuários enquanto existirem vendas cadastradas");
+    const error = new Error(
+      "Não é possível deletar todos os usuários enquanto existirem vendas cadastradas"
+    );
     error.statusCode = 400;
     throw error;
   }
